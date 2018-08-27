@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Beacon</string>
+    <string name="news">News</string>
+    <string name="courses">Courses</string>
+    <string name="user">User</string>
+</resources>

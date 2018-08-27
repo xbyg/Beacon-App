@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "184577167858",
+    "firebase_url": "https://beacon-xbyg.firebaseio.com",
+    "project_id": "beacon-xbyg",
+    "storage_bucket": "beacon-xbyg.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:184577167858:android:fad08045b131234b",
+        "android_client_info": {
+          "package_name": "com.xbyg_plus.beacon"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "184577167858-6n139ssobdu85f4lrpapnihl6en4qtdk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUku8gefc7I-0ULucGCkA5Umlu8UWWPLU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

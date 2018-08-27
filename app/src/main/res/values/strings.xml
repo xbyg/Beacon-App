@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name" translatable="false">Beacon</string>
+    <string name="news">消息</string>
+    <string name="courses">課程</string>
+    <string name="user">用戶</string>
+</resources>
