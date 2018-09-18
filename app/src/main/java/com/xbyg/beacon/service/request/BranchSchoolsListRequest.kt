@@ -1,6 +1,5 @@
 package com.xbyg.beacon.service.request
 
-import com.xbyg.beacon.data.BranchSchool
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import okhttp3.Response

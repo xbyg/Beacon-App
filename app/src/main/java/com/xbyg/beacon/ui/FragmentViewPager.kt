@@ -10,7 +10,7 @@ import android.util.AttributeSet
 class FragmentViewPager(context: Context, attrs: AttributeSet) : ViewPager(context, attrs) {
 
     class FragmentAdapter(private val fm: FragmentManager, private val fragments: List<Fragment>, private val titles: List<String>? = null) : FragmentStatePagerAdapter(fm) {
-        override fun getItem(position: Int): Fragment = fragments.get(position)
+        override fun getItem(position: Int): Fragment = fragments[position]
 
         override fun getCount(): Int = fragments.size
 

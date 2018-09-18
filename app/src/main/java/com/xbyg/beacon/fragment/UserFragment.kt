@@ -1,5 +1,6 @@
 package com.xbyg.beacon.fragment
 
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
@@ -33,15 +34,34 @@ class UserFragment : Fragment(), LoginDialog.Listener, StringArrayDialog.Listene
         locations.setOnClickListener { _ -> showLocationsDialog() }
 
         if (userService.isLoggedIn()) {
-            guestLayout.visibility = View.GONE
-            userLayout.visibility = View.VISIBLE
+            loginBtn.visibility = View.GONE
 
-            name.text = userService.user!!.name
-            courses.setOnClickListener { _ -> startActivity(Intent(context, StudentCoursesActivity::class.java)) }
-            logout.setOnClickListener { _ ->
-                userService.logout().subscribe { (context as Activity).recreate() }
+            val userProfile = userService.userProfile!!
+            name.text = userProfile.engName
+            electives.text = userProfile.electives
+            phone.text = userProfile.phoneNumber
+            school.text = userProfile.school
+            userID.text = userProfile.userID
+
+            profileCardView.setOnClickListener {
+                profileDetails.toggle()
+
+                val initialValue = if (!profileDetails.isExpanded) 0f else 180f
+                ValueAnimator.ofFloat(initialValue, 180f - initialValue).apply {
+                    addUpdateListener { animator ->
+                        arrow.rotation = animator.animatedValue as Float
+                    }
+                    duration = 600
+                    start()
+                }
             }
+
+            courses.setOnClickListener { _ -> startActivity(Intent(context, StudentCoursesActivity::class.java)) }
+            logout.setOnClickListener { _ -> userService.logout().subscribe { (context as Activity).recreate() } }
         } else {
+            edit.visibility = View.GONE
+            logout.visibility = View.GONE
+            arrow.visibility = View.GONE
             loginBtn.setOnClickListener { _ -> showLoginDialog() }
             courses.setOnClickListener { _ -> showLoginDialog() }
         }
@@ -59,8 +79,8 @@ class UserFragment : Fragment(), LoginDialog.Listener, StringArrayDialog.Listene
 
     private fun showLoginDialog() = LoginDialog(this.context!!, this).show()
 
-    override fun onSubmit(dialog: LoginDialog, username: String, pwd: String) {
-        userService.login(username, pwd).observeOn(AndroidSchedulers.mainThread())
+    override fun onSubmit(dialog: LoginDialog, email: String, pwd: String) {
+        userService.login(email, pwd).observeOn(AndroidSchedulers.mainThread())
                 .subscribe { success ->
                     if (success) {
                         dialog.dismiss()

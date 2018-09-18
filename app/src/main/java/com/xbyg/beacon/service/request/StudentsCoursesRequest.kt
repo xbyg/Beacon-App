@@ -1,6 +1,5 @@
 package com.xbyg.beacon.service.request
 
-import com.orhanobut.logger.Logger
 import com.xbyg.beacon.data.StudentCourse
 import com.xbyg.beacon.data.Lesson
 import io.reactivex.Single
@@ -10,9 +9,9 @@ import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 import java.nio.charset.Charset
 
-class StudentsCoursesRequest : GZIPHtmlRequest<List<StudentCourse>>(Charset.forName("big5")) {
+class StudentsCoursesRequest : GZIPHtmlRequest<List<StudentCourse>>(Charset.forName("utf-8")) {
 
-    override fun make(): Single<List<StudentCourse>> = get("https://www.beacon.com.hk/2009/stu_att_lists.php")
+    override fun make(): Single<List<StudentCourse>> = get("https://studentportal.beacon.com.hk/history")
             .observeOn(Schedulers.computation())
             .map { response -> parseResponse(response) }
 
@@ -20,41 +19,29 @@ class StudentsCoursesRequest : GZIPHtmlRequest<List<StudentCourse>>(Charset.forN
     // it saved my life XD
     override fun parseResponse(response: Response): List<StudentCourse> {
         val decompressedString = decompress(response.body()!!.bytes())
-        val elements: Elements = Jsoup.parse(decompressedString).select("table[border=2] tbody tr:not([bgcolor=#669966])")
-        val courseElements: Elements = elements.not("[bgcolor=#FFFFFF]")
-
+        val tbody = Jsoup.parse(decompressedString).select("div[class=panel-body] > table > tbody")[0]
+        val courseElements: Elements = tbody.getElementsByClass("student_history")
         val courses = ArrayList<StudentCourse>()
-        for (courseElement in courseElements) {
-            // strings are not wrapped by elements and they are just separated by <br>
-            // so it is quite thorny to extract data from the HTML since jsoup cannot treat them as an element
-            // sample :
-            // <b>COURSE_ID </b><br>導師/級別/科目: TUTOR_NAME COURSE_NAME<br>課程名稱: COURSE_NAME<br>課程類型: --<br>上課地點: <br>
-            val html = courseElement.select("font")[0].html()
-            Logger.d(html)
-            val id = courseElement.getElementsByTag("b")[0].text()
 
-            val regexResults = Regex("(?<=: )([\\u4e00-\\u9fa5_A-Z_a-z_0-9_ _\\-_.])*(?=<br>)").findAll(html).toList()
-            val courseName = regexResults[0].value
-            val topic = if (regexResults[2].value.equals(" --")) null else regexResults[2].value
-            courses.add(StudentCourse(id, courseName, "", topic, ArrayList<Lesson>())) // the value of the third parameter 'time' which represents the time of each lesson in that course is defined below
+        for ( courseElement in courseElements ) {
+            val tds = courseElement.getElementsByTag("td")
+            val id = tds[2].text()
+            val tutor = tds[4].text()
+            val subject = tds[5].text()
+            courses.add(StudentCourse(id, tutor, subject, ArrayList()))
         }
 
-        var i = -1
-        for (element in elements) {
-            if (!element.hasAttr("bgcolor")) {
-                i++
-                continue
-            }
+        for ( i in courses.indices ) {
             val course = courses[i]
-
-            val fonts = element.select("font")
-            val classNo = fonts[0].text()
-            val date = fonts[1].text()
-            val time = fonts[2].text()
-            val changedLesson = fonts[3].text()
-
-            course.time = time
-            course.lessons.add(Lesson(classNo, date, time, changedLesson))
+            val lessonsElements = tbody.select("tr[id=collapse_$i] > td > table > tbody > tr")
+            for ( lessonElement in lessonsElements ) {
+                val tds = lessonElement.getElementsByTag("td")
+                val date = tds[1].text().split(" ")[0]
+                val day = tds[1].text().split(" ")[1]
+                val time = tds[2].text()
+                val location = tds[3].text()
+                course.lessons.add(Lesson(date, day, time, location))
+            }
         }
         return courses
     }

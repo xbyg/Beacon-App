@@ -11,7 +11,7 @@ import com.xbyg.beacon.data.StudentCourse
 import kotlinx.android.synthetic.main.dialog_std_course_selector.*
 import kotlinx.android.synthetic.main.item_student_course.view.*
 
-class StudentCoursesDialog(c: Context, val date: String, val courses: List<StudentCourse>, val listener: Listener) : Dialog(c) {
+class StudentCoursesDialog(c: Context, val date: String, val courses: Map<StudentCourse, Int>, val listener: Listener) : Dialog(c) {
 
     interface Listener {
         fun onSelect(dialog: Dialog, view: View, date: String, course: StudentCourse)
@@ -23,16 +23,17 @@ class StudentCoursesDialog(c: Context, val date: String, val courses: List<Stude
         window.setBackgroundDrawableResource(android.R.color.transparent)
 
         for (course in courses) {
-            rootView.addView(generateCourseLayout(course))
+            rootView.addView(generateCourseLayout(course.key, course.value))
         }
     }
 
-    private fun generateCourseLayout(course: StudentCourse): CardView {
+    private fun generateCourseLayout(course: StudentCourse, lessonIndex: Int): CardView {
         val courseLayout = LayoutInflater.from(context).inflate(R.layout.item_student_course, rootView, false).apply {
-            courseName.text = course.name
-            courseID.text = "ID: " + course.id
-            courseTime.text = "Time: " + course.time
-            courseTopic.text = "Topic: " + course.topic
+            courseSubject.text = course.subject
+            courseTutor.text = "Tutor: ${course.tutor}"
+            courseID.text = "ID: ${course.id}"
+            location.text = "Location: ${course.lessons[lessonIndex].location}"
+            time.text = "Time: ${course.lessons[lessonIndex].time}"
 
             setOnClickListener {
                 listener.onSelect(this@StudentCoursesDialog, this, date, course)

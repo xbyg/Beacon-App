@@ -6,14 +6,13 @@ import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import com.xbyg.beacon.R
-import com.xbyg.beacon.data.ExchangeForm
 import com.xbyg.beacon.data.ExchangeLesson
 import kotlinx.android.synthetic.main.dialog_exchange_list.*
 
 class ExchangeListDialog(private val c: Context, private val courseName: String, private val availableLessons: List<ExchangeLesson>, val listener: Listener) : Dialog(c) {
 
     interface Listener {
-        fun onSubmit(dialog: Dialog, lesson: ExchangeLesson, form: ExchangeForm)
+        fun onSubmit(dialog: Dialog, lesson: ExchangeLesson)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,9 +28,8 @@ class ExchangeListDialog(private val c: Context, private val courseName: String,
         spinner.adapter = adapter
 
         submitBtn.setOnClickListener { _ ->
-            val form = ExchangeForm(contactNo.text.toString(), reason.text.toString())
             val selectedLessonString = spinner.selectedItem.toString()
-            listener.onSubmit(this, index[selectedLessonString]!!, form)
+            listener.onSubmit(this, index[selectedLessonString]!!)
         }
     }
 }

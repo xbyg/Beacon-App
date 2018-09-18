@@ -10,18 +10,18 @@ class UserService : Service {
         val instances = UserService()
     }
 
-    var user: User? = null
+    var userProfile: UserProfile? = null
 
-    fun isLoggedIn(): Boolean = user != null
+    fun isLoggedIn(): Boolean = userProfile != null
 
     fun login(username: String, pwd: String): Single<Boolean> = LoginRequest(username, pwd).make().doOnSuccess { success ->
         if (success) {
-            user = User(NameRequest().make().blockingGet(), username, pwd)
+            userProfile = UserProfileRequest(username, pwd).make().blockingGet()
         }
     }
 
     fun logout(): Completable = Completable.create { e ->
-        user = null
+        userProfile = null
         e.onComplete()
     }
 
@@ -29,5 +29,5 @@ class UserService : Service {
 
     fun getExchangeList(courseID: String, originalDate: String): Single<List<ExchangeLesson>> = ExchangeListRequest(courseID, originalDate).make()
 
-    fun exchangeLesson(lesson: ExchangeLesson, form: ExchangeForm): Single<Boolean> = ExchangeLessonRequest(lesson, form).make()
+    fun exchangeLesson(lesson: ExchangeLesson): Single<Boolean> = ExchangeLessonRequest(lesson).make()
 }

@@ -10,35 +10,33 @@ import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
 import com.prolificinteractive.materialcalendarview.spans.DotSpan
 import com.xbyg.beacon.R
-import com.xbyg.beacon.data.ExchangeForm
 import com.xbyg.beacon.data.ExchangeLesson
 import com.xbyg.beacon.data.StudentCourse
 import com.xbyg.beacon.dialog.ExchangeListDialog
 import com.xbyg.beacon.dialog.StudentCoursesDialog
 import com.xbyg.beacon.service.UserService
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_std_courses.*
 
 class StudentCoursesActivity : AppCompatActivity(), StudentCoursesDialog.Listener, ExchangeListDialog.Listener {
-    private val courses = HashMap<String, ArrayList<StudentCourse>>()
+    private val courses = HashMap<String, HashMap<StudentCourse, Int>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_std_courses)
 
         UserService.instances.getCourses()
-                .observeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { attendedCourses: List<StudentCourse> ->
-                    val lessonsDate = ArrayList<String>()
+                    val lessonsDate = HashSet<String>()
+
                     attendedCourses.forEach { course ->
-                        course.lessons.forEach { lesson ->
+                        course.lessons.forEachIndexed { index, lesson ->
                             lessonsDate.add(lesson.date)
-                            if (courses[lesson.date] != null) {
-                                courses[lesson.date]!!.add(course)
-                            } else {
-                                courses[lesson.date] = ArrayList<StudentCourse>().apply { add(course) }
+                            if (courses[lesson.date] == null) {
+                                courses[lesson.date] = HashMap()
                             }
+                            courses[lesson.date]!![course] = index
                         }
                     }
 
@@ -53,6 +51,8 @@ class StudentCoursesActivity : AppCompatActivity(), StudentCoursesDialog.Listene
             val date = getDateFromCalendarDay(day)
             if (courses.keys.contains(date)) {
                 StudentCoursesDialog(this@StudentCoursesActivity, date, courses[date]!!, this).show()
+            } else {
+                rootView.showSnackBar("No lessons on that day")
             }
         }
     }
@@ -66,19 +66,19 @@ class StudentCoursesActivity : AppCompatActivity(), StudentCoursesDialog.Listene
                         return@subscribe
                     }
                     dialog.dismiss()
-                    ExchangeListDialog(this@StudentCoursesActivity, course.name, exchangeLessonList, this@StudentCoursesActivity).show()
+                    ExchangeListDialog(this@StudentCoursesActivity, "${course.tutor} ${course.subject}", exchangeLessonList, this@StudentCoursesActivity).show()
                 }
     }
 
-    override fun onSubmit(dialog: Dialog, lesson: ExchangeLesson, form: ExchangeForm) {
+    override fun onSubmit(dialog: Dialog, lesson: ExchangeLesson) {
         dialog.dismiss()
-        //UserService.instances.exchangeLesson(lesson, form).subscribe { _ ->
+        //UserService.instances.exchangeLesson(lesson).subscribe { _ ->
 
         //}
     }
 
     private fun getDateFromCalendarDay(calendarDay: CalendarDay): String {
-        val monthString = if (calendarDay.month < 10) "0${calendarDay.month + 1}" else calendarDay.month.toString() //Bug? if calendarDay.month = 8, the month displayed on the calendar view is 9
+        val monthString = if (calendarDay.month < 9) "0${calendarDay.month + 1}" else (calendarDay.month + 1).toString() //Bug? if calendarDay.month = 8, the month displayed on the calendar view is 9
         val dayString = if (calendarDay.day < 10) "0${calendarDay.day}" else calendarDay.day.toString()
         return "${calendarDay.year}-$monthString-$dayString"
     }

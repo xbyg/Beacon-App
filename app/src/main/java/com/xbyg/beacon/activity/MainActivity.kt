@@ -11,7 +11,6 @@ import android.support.v4.view.ViewPager
 import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import com.xbyg.beacon.fragment.TutorsFragment
-import com.xbyg.beacon.fragment.NewsFragment
 import com.xbyg.beacon.fragment.UserFragment
 import android.support.design.widget.Snackbar
 import com.xbyg.beacon.R
@@ -28,9 +27,8 @@ fun View.showSnackBar(message: String) = Snackbar.make(this, message, Snackbar.L
 class MainActivity : AppCompatActivity() {
     private val itemClickedListener = BottomNavigationView.OnNavigationItemSelectedListener {
         when (it.itemId) {
-            R.id.navigationNews -> viewPager.setCurrentItem(0, true)
-            R.id.navigationCourses -> viewPager.setCurrentItem(1, true)
-            R.id.navigationUser -> viewPager.setCurrentItem(2, true)
+            R.id.navigationCourses -> viewPager.setCurrentItem(0, true)
+            R.id.navigationUser -> viewPager.setCurrentItem(1, true)
         }
         true
     }
@@ -55,7 +53,6 @@ class MainActivity : AppCompatActivity() {
         navigation.setOnNavigationItemSelectedListener(itemClickedListener)
 
         val fragments = ArrayList<Fragment>().apply {
-            add(NewsFragment())
             add(TutorsFragment())
             add(UserFragment())
         }
