@@ -10,15 +10,16 @@ import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
 import com.prolificinteractive.materialcalendarview.spans.DotSpan
 import com.xbyg.beacon.R
-import com.xbyg.beacon.data.ExchangeLesson
+import com.xbyg.beacon.data.ExchangeForm
 import com.xbyg.beacon.data.StudentCourse
-import com.xbyg.beacon.dialog.ExchangeListDialog
+import com.xbyg.beacon.dialog.ExchangeFormDialog
+import com.xbyg.beacon.dialog.PaymentDialog
 import com.xbyg.beacon.dialog.StudentCoursesDialog
 import com.xbyg.beacon.service.UserService
 import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_std_courses.*
 
-class StudentCoursesActivity : AppCompatActivity(), StudentCoursesDialog.Listener, ExchangeListDialog.Listener {
+class StudentCoursesActivity : AppCompatActivity(), StudentCoursesDialog.Listener, ExchangeFormDialog.Listener, PaymentDialog.Listener {
     private val courses = HashMap<String, HashMap<StudentCourse, Int>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,31 +51,38 @@ class StudentCoursesActivity : AppCompatActivity(), StudentCoursesDialog.Listene
         calendarView.setOnDateChangedListener { _, day, _ ->
             val date = getDateFromCalendarDay(day)
             if (courses.keys.contains(date)) {
-                StudentCoursesDialog(this@StudentCoursesActivity, date, courses[date]!!, this).show()
+                StudentCoursesDialog(this, date, courses[date]!!, this).show()
             } else {
                 rootView.showSnackBar("No lessons on that day")
             }
         }
     }
 
-    override fun onSelect(dialog: Dialog, view: View, date: String, course: StudentCourse) {
-        UserService.instances.getExchangeList(course.id, date)
+    override fun onSelectExchangeCourse(dialog: Dialog, view: View, date: String, course: StudentCourse) {
+        UserService.instances.getExchangeForm(course.id, date)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { exchangeLessonList: List<ExchangeLesson> ->
-                    if (exchangeLessonList.isEmpty()) {
+                .subscribe { exchangeForm: ExchangeForm? ->
+                    if (exchangeForm == null) {
                         view.showSnackBar("No available lessons!")
                         return@subscribe
                     }
                     dialog.dismiss()
-                    ExchangeListDialog(this@StudentCoursesActivity, "${course.tutor} ${course.subject}", exchangeLessonList, this@StudentCoursesActivity).show()
+                    ExchangeFormDialog(this, "${course.tutor} ${course.subject}", exchangeForm, this).show()
                 }
     }
 
-    override fun onSubmit(dialog: Dialog, lesson: ExchangeLesson) {
+    override fun onCompleteExchangeForm(dialog: Dialog, exchangeForm: ExchangeForm) {
         dialog.dismiss()
-        //UserService.instances.exchangeLesson(lesson).subscribe { _ ->
+        UserService.instances.getPayment(exchangeForm)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { payment ->
+                    dialog.dismiss()
+                    PaymentDialog(this, payment, this).show()
+                }
+    }
 
-        //}
+    override fun onPaymentSuccess(dialog: Dialog) {
+        dialog.dismiss()
     }
 
     private fun getDateFromCalendarDay(calendarDay: CalendarDay): String {

@@ -27,7 +27,9 @@ class UserService : Service {
 
     fun getCourses(): Single<List<StudentCourse>> = StudentsCoursesRequest().make()
 
-    fun getExchangeList(courseID: String, originalDate: String): Single<List<ExchangeLesson>> = ExchangeListRequest(courseID, originalDate).make()
+    fun getExchangeForm(courseID: String, originalDate: String): Single<ExchangeForm?> = ExchangeFormRequest(courseID, originalDate).make()
 
-    fun exchangeLesson(lesson: ExchangeLesson): Single<Boolean> = ExchangeLessonRequest(lesson).make()
+    fun getPayment(exchangeForm: ExchangeForm) = PaymentRequest(exchangeForm).make()
+
+    fun exchangeLesson(payment: Payment): Single<Boolean> = ExchangeLessonRequest(payment).make()
 }

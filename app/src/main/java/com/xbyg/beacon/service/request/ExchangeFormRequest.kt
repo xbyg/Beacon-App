@@ -1,6 +1,7 @@
 package com.xbyg.beacon.service.request
 
 import com.orhanobut.logger.Logger
+import com.xbyg.beacon.data.ExchangeForm
 import com.xbyg.beacon.data.ExchangeLesson
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
@@ -8,13 +9,13 @@ import okhttp3.Response
 import org.jsoup.Jsoup
 import java.nio.charset.Charset
 
-class ExchangeListRequest(val courseID: String, val originalDate: String) : GZIPHtmlRequest<List<ExchangeLesson>>(Charset.forName("utf-8")) {
+class ExchangeFormRequest(val courseID: String, val originalDate: String) : GZIPHtmlRequest<ExchangeForm?>(Charset.forName("utf-8")) {
 
-    override fun make(): Single<List<ExchangeLesson>> {
+    override fun make(): Single<ExchangeForm?> {
         return getOriginalLessonListURL().flatMap { url ->
             if (url.equals("empty")) Single.just("empty") else getAvailableLessonListURL(url)
         }.map { url ->
-            if (url.equals("empty")) ArrayList() else parseResponse(get(url).blockingGet())
+            if (url.equals("empty")) null else parseResponse(get(url).blockingGet())
         }
     }
 
@@ -48,12 +49,12 @@ class ExchangeListRequest(val courseID: String, val originalDate: String) : GZIP
                 }
     }
 
-    override fun parseResponse(response: Response): List<ExchangeLesson> {
+    override fun parseResponse(response: Response): ExchangeForm? {
         val decompressedString = decompress(response.body()!!.bytes())
-        val optionsElements = Jsoup.parse(decompressedString).select("option")
-        if (optionsElements[0].text().equals("沒有任何相關課程") || optionsElements[0].text().equals("您所選之堂數的所有調堂名額已滿")) {
-            return ArrayList()
-        }
+        val form = Jsoup.parse(decompressedString).getElementById("changelesson-form")
+        if (form == null) return null
+
+        val optionsElements = form.select("option")
 
         val exchangeLessons = ArrayList<ExchangeLesson>()
         for (optionElement in optionsElements) {
@@ -67,6 +68,12 @@ class ExchangeListRequest(val courseID: String, val originalDate: String) : GZIP
                 exchangeLessons.add(ExchangeLesson(id, postID, date, time, location))
             }
         }
-        return exchangeLessons
+
+        val token = form.select("input[name=_token]").attr("value")
+        val lid = form.select("input[name=lid]").attr("value")
+        val edid = form.select("input[name=edid]").attr("value")
+        val classID = form.select("input[name=class_id]").attr("value")
+        val sectionID = form.select("input[name=section_id]").attr("value")
+        return ExchangeForm("", exchangeLessons, token, lid, edid, classID, sectionID)
     }
 }

@@ -4,12 +4,12 @@ import com.xbyg.beacon.data.Payment
 import io.reactivex.Single
 import okhttp3.Response
 
-class ExchangeLessonRequest(private val payment: Payment) : Request<Boolean>() {
-    override fun make(): Single<Boolean> {
+class PaypalUrlRequest(private val payment: Payment): Request<String>() {
+    override fun make(): Single<String> {
         val map = HashMap<String, String>().apply {
+            put("_token", payment.token)
             put("amount", payment.amount)
             put("enrolment_id", payment.enrolmentID)
-            put("_token", payment.token)
         }
 
         return post("https://studentportal.beacon.com.hk/paypalChangeLesson", map)
@@ -17,5 +17,5 @@ class ExchangeLessonRequest(private val payment: Payment) : Request<Boolean>() {
                 .doOnError { e -> e.printStackTrace() }
     }
 
-    override fun parseResponse(response: Response): Boolean = true //TODO: Awaiting for sample...
+    override fun parseResponse(response: Response): String = response.header("Location")!!
 }

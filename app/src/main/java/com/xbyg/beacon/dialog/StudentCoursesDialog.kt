@@ -14,7 +14,7 @@ import kotlinx.android.synthetic.main.item_student_course.view.*
 class StudentCoursesDialog(c: Context, val date: String, val courses: Map<StudentCourse, Int>, val listener: Listener) : Dialog(c) {
 
     interface Listener {
-        fun onSelect(dialog: Dialog, view: View, date: String, course: StudentCourse)
+        fun onSelectExchangeCourse(dialog: Dialog, view: View, date: String, course: StudentCourse)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +36,7 @@ class StudentCoursesDialog(c: Context, val date: String, val courses: Map<Studen
             time.text = "Time: ${course.lessons[lessonIndex].time}"
 
             setOnClickListener {
-                listener.onSelect(this@StudentCoursesDialog, this, date, course)
+                listener.onSelectExchangeCourse(this@StudentCoursesDialog, this, date, course)
             }
         }
         return courseLayout as CardView
